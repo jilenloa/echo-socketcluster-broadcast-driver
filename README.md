@@ -21,7 +21,7 @@ After updating composer, add the service provider to the providers array in conf
 EchoSocketCluster\Providers\EchoSocketClusterServiceProvider
 ```
 
-Add this to your .env file
+Add this configuration to your .env file
 ```dotenv
 ECHO_SC_HOST=localhost:8001
 ECHO_SC_TOKEN=echo-server-token
