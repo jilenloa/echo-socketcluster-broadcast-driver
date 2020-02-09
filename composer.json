@@ -1,0 +1,35 @@
+{
+    "name": "jilenloa/echo-socketcluster-broadcast-driver",
+    "description": "Laravel socketcluster broadcaster. This is compatible with Laravel Echo client",
+    "version": "0.0.1",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Jimmy Ilenloa",
+            "email": "jilenloa@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "EchoSocketCluster\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "EchoSocketCluster\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=7.1",
+        "guzzlehttp/guzzle": "^6.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.0",
+        "laravel/framework": "^5.8",
+        "mockery/mockery": "0.9.*"
+    },
+    "suggest": {
+        "laravel/framework": "Framework Laravel (^5.8)"
+    }
+}
