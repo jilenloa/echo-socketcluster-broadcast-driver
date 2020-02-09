@@ -21,10 +21,10 @@ After updating composer, add the service provider to the providers array in conf
 EchoSocketCluster\Providers\EchoSocketClusterServiceProvider
 ```
 
-After installing, you need to require Composer's autoloader:
-
-```php
-require 'vendor/autoload.php';
+Add this to your .env file
+```dotenv
+ECHO_SC_HOST=localhost:8001
+ECHO_SC_TOKEN=echo-server-token
 ```
 
 You can then later update the package later using composer:
