@@ -20,14 +20,9 @@ class EchoSocketClusterServiceProvider extends BaseServiceProvider
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     public function boot(){
-
-        $configPath = __DIR__ . '/../../config/echo-sc.php';
-        if (function_exists('config_path')) {
-            $publishPath = config_path('echo-sc.php');
-        } else {
-            $publishPath = base_path('config/echo-sc.php');
-        }
-        $this->publishes([$configPath => $publishPath], 'config');
+        $this->app->make(BroadcastManager::class)->extend('echosocketcluster', function ($app) {
+            return new EchoSocketClusterBroadcaster();
+        });
     }
 
     /**
@@ -38,10 +33,13 @@ class EchoSocketClusterServiceProvider extends BaseServiceProvider
     public function register()
     {
         $configPath = __DIR__ . '/../../config/echo-sc.php';
-        $this->mergeConfigFrom($configPath, 'echo-sc');
+        if (function_exists('config_path')) {
+            $publishPath = config_path('echo-sc.php');
+        } else {
+            $publishPath = base_path('config/echo-sc.php');
+        }
+        $this->publishes([$configPath => $publishPath], 'config');
 
-        $this->app->make(BroadcastManager::class)->extend('echosocketcluster', function ($app) {
-            return new EchoSocketClusterBroadcaster();
-        });
+        $this->mergeConfigFrom($configPath, 'echo-sc');
     }
 }

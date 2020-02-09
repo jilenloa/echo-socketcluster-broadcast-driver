@@ -26,21 +26,6 @@ class EchoSocketClusterServiceProviderTest extends TestCase {
 
         $app['path.config'] = __DIR__ . '/../../config';
 
-        $sp = new EchoSocketClusterServiceProvider($app);
-
-        $sp->boot();
-
-        $this->assertTrue(count(EchoSocketClusterServiceProvider::$publishes['EchoSocketCluster\Providers\EchoSocketClusterServiceProvider'] ?? []) === 1);
-
-        $this->assertContains('echo-sc.php', collect(EchoSocketClusterServiceProvider::$publishes['EchoSocketCluster\Providers\EchoSocketClusterServiceProvider'] ?? [])->first());
-
-    }
-
-    public function testShouldRegister(){
-        $app = app();
-
-        $app['path.config'] = __DIR__ . '/../../config';
-
         $app->shouldReceive('make')->once()->with('Illuminate\Broadcasting\BroadcastManager')->andReturn($app);
 
         $app->shouldReceive('extend')->once()->andReturnUsing(function ($driver, $callback) use ($app) {
@@ -53,9 +38,20 @@ class EchoSocketClusterServiceProviderTest extends TestCase {
 
         $sp = new EchoSocketClusterServiceProvider($app);
 
-        $sp->register();
-
         $sp->boot();
+
+
+
+    }
+
+    public function testShouldRegister(){
+        $app = app();
+
+        $app['path.config'] = __DIR__ . '/../../config';
+
+        $sp = new EchoSocketClusterServiceProvider($app);
+
+        $sp->register();
 
         $this->assertArrayHasKey('broadcast_host', config('echo-sc'));
         $this->assertArrayHasKey('user_token', config('echo-sc'));

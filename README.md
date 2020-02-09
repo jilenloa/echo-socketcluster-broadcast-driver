@@ -12,13 +12,24 @@ The echo-socketcluster-server package can be installed via npm.
 
 Install package using Composer
 ```bash
-composer require jilenloa/echo-socketcluster-broadcast-driver
+composer require jilenloa/echo-socketcluster-broadcast-driver:dev-master
 ```
 
-After updating composer, add the service provider to the providers array in config/app.php
+After updating composer, add the service provider to the providers array in config/app.php. 
+
+**Note**: You must add this service provider just before the App\Providers\BroadcastServiceProvider::class
 
 ```php
-EchoSocketCluster\Providers\EchoSocketClusterServiceProvider
+EchoSocketCluster\Providers\EchoSocketClusterServiceProvider::class,
+App\Providers\BroadcastServiceProvider::class,
+```
+
+Add below to your broadcasting.php file.
+
+```php
+'echosocketcluster' => [
+    'driver' => 'echosocketcluster',
+],
 ```
 
 Add this configuration to your .env file. Update the current setting for BROADCAST_DRIVER to the one below
