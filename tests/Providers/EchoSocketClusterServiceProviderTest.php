@@ -26,16 +26,6 @@ class EchoSocketClusterServiceProviderTest extends TestCase {
 
         $app['path.config'] = __DIR__ . '/../../config';
 
-        $app->shouldReceive('make')->once()->with('Illuminate\Broadcasting\BroadcastManager')->andReturn($app);
-
-        $app->shouldReceive('extend')->once()->andReturnUsing(function ($driver, $callback) use ($app) {
-            $this->assertEquals('echosocketcluster', $driver);
-
-            $broadcaster = $callback($app);
-            $this->assertInstanceOf('EchoSocketCluster\Laravel\EchoSocketClusterBroadcaster', $broadcaster);
-        });
-
-
         $sp = new EchoSocketClusterServiceProvider($app);
 
         $sp->boot();
@@ -48,9 +38,24 @@ class EchoSocketClusterServiceProviderTest extends TestCase {
 
     public function testShouldRegister(){
         $app = app();
+
+        $app['path.config'] = __DIR__ . '/../../config';
+
+        $app->shouldReceive('make')->once()->with('Illuminate\Broadcasting\BroadcastManager')->andReturn($app);
+
+        $app->shouldReceive('extend')->once()->andReturnUsing(function ($driver, $callback) use ($app) {
+            $this->assertEquals('echosocketcluster', $driver);
+
+            $broadcaster = $callback($app);
+            $this->assertInstanceOf('EchoSocketCluster\Laravel\EchoSocketClusterBroadcaster', $broadcaster);
+        });
+
+
         $sp = new EchoSocketClusterServiceProvider($app);
 
         $sp->register();
+
+        $sp->boot();
 
         $this->assertArrayHasKey('broadcast_host', config('echo-sc'));
         $this->assertArrayHasKey('user_token', config('echo-sc'));

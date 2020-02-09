@@ -20,9 +20,6 @@ class EchoSocketClusterServiceProvider extends BaseServiceProvider
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     public function boot(){
-        $this->app->make(BroadcastManager::class)->extend('echosocketcluster', function ($app) {
-            return new EchoSocketClusterBroadcaster();
-        });
 
         $configPath = __DIR__ . '/../../config/echo-sc.php';
         if (function_exists('config_path')) {
@@ -42,5 +39,9 @@ class EchoSocketClusterServiceProvider extends BaseServiceProvider
     {
         $configPath = __DIR__ . '/../../config/echo-sc.php';
         $this->mergeConfigFrom($configPath, 'echo-sc');
+
+        $this->app->make(BroadcastManager::class)->extend('echosocketcluster', function ($app) {
+            return new EchoSocketClusterBroadcaster();
+        });
     }
 }
