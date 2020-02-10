@@ -1,3 +1,4 @@
 .idea/
 composer.lock
 vendor/
+echo-socketcluster-server/node_modules/
