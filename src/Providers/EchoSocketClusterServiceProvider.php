@@ -38,7 +38,7 @@ class EchoSocketClusterServiceProvider extends BaseServiceProvider
         } else {
             $publishPath = base_path('config/echo-sc.php');
         }
-        $this->publishes([$configPath => $publishPath], 'config');
+        $this->publishes([$configPath => $publishPath], 'echosocketcluster');
 
         $this->mergeConfigFrom($configPath, 'echo-sc');
     }

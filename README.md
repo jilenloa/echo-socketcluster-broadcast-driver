@@ -41,6 +41,12 @@ ECHO_SC_HOST=localhost:8001
 ECHO_SC_TOKEN=echo-server-token
 ```
 
+Optionally, you can publish the configuration file using the command:
+
+```bash
+php artisan vendor:publish --tag=echosocketcluster
+```
+
 You can then later update the package later using composer:
 
  ```bash
