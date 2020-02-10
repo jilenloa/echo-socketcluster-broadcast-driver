@@ -47,14 +47,47 @@ ECHO_SC_HOST=localhost:8001
 ECHO_SC_TOKEN=echo-server-token
 ```
 
-Optionally, you can publish the configuration file using the command:
+You can publish the configuration and echo-socketcluster-server files using the command:
 
 ```bash
 php artisan vendor:publish --tag=echosocketcluster
 ```
+
 
 You can then later update the package later using composer:
 
  ```bash
 composer update
  ```
+
+Laravel Echo Client
+-----------
+
+
+```bash
+npm install laravel-echo
+npm install laravel-echo-connector-socketcluster
+```
+
+Below is a sample use of the Laravel Echo client.
+
+```javascript
+import Echo from "laravel-echo";
+import SocketClusterConnector from "laravel-echo-connector-socketcluster";
+
+let echo = new Echo({
+      broadcaster: SocketClusterConnector,
+      auth: {
+        headers: {
+            //add custom headers here, useful for JWT authentication
+        },
+        hostname: 'localhost:8001', //laravel host to authorize channels. this is sometimes optional
+      },
+      socketcluster: {
+            hostname: 'localhost',
+            port: 8001
+        }
+    });
+```
+
+For more information on laravel-echo visit https://laravel.com/docs/broadcasting.

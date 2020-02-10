@@ -76,10 +76,6 @@
       (async () => {
         for await (let event of socket.listener('connect')) {
           console.log('Socket is connected');
-
-          console.log(event);
-          socket.subscribe('samplechannel');
-
         }
       })();
     </script>

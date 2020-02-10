@@ -183,6 +183,9 @@ let prepareHeaders = function(socket, options) {
         options.headers['Cookie'] = cookieVal;
     }
     options.headers['X-Requested-With'] = 'XMLHttpRequest';
+    options.headers['X-Socket-ID'] = socket.id;
+
+    console.log(options);
 
     return options.headers;
 };
@@ -197,6 +200,7 @@ agServer.setMiddleware(agServer.MIDDLEWARE_INBOUND, async (middlewareStream) => 
     console.log(action.type);
 
     console.log(action);
+    console.log(action.data);
 
     if(action.type === action.SUBSCRIBE){
         if(typeof action.data === typeof undefined){
@@ -207,20 +211,35 @@ agServer.setMiddleware(agServer.MIDDLEWARE_INBOUND, async (middlewareStream) => 
             action.block(error);
             continue;
         }
-        let csrf_name = action.data.auth.headers['CSRF-TOKEN-NAME'] || 'csrf_token';
-        let csrf_token = action.data.auth.headers['X-CSRF-TOKEN'] || '';
+        let csrf_name;
+        let csrf_token;
+
+        let send_headers_object;
+
+        if(typeof action.data.auth !== typeof undefined && typeof action.data.auth.headers !== typeof undefined){
+            csrf_name = action.data.auth.headers['CSRF-TOKEN-NAME'] || 'csrf_token';
+            csrf_token = action.data.auth.headers['X-CSRF-TOKEN'] || '';
+            send_headers_object = action.data.auth.headers;
+        }else{
+            csrf_name = 'csrf_token';
+            csrf_token = '';
+            send_headers_object = {};
+        }
+
+        console.log('send_headers');
+        console.log(send_headers_object);
+        console.log();
+
         let _options = {
             form: {
                 channel_name: action.data.channel
             },
-            headers: action.data.auth.headers,
+            headers: send_headers_object,
             url:  action.data.auth.url
         };
 
         // support for sending token via only forms
         _options.form[csrf_name] = csrf_token;
-
-        console.log(_options);
 
         serverRequest(action.socket, _options).then((res) => {
             console.log("successfully subscribed to "+action.data.channel);
