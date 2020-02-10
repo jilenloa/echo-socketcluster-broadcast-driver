@@ -91,3 +91,12 @@ let echo = new Echo({
 ```
 
 For more information on laravel-echo visit https://laravel.com/docs/broadcasting.
+
+**Finally**
+
+- Make sure you load the ***socketcluster-client.js*** on your web page for the socketcluster connection to work. 
+- Before testing, ensure that you have started the echo-socketcluster-server.
+
+
+If you experience any challenge, don't hesitate to submit an issue [here](https://github.com/jilenloa/echo-socketcluster-broadcast-driver/issues). 
+
