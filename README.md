@@ -12,6 +12,8 @@ Echo Compatible Server using SocketCluster
 ---------
 The echo-socketcluster-server package is created using SocketCluster and it's part of this repo and you can copy it to any folder of your choice. It comes with its own package.json, so you would need to run the npm install command inside the folder afterwards.
 
+For more information on SocketCluster, visit https://socketcluster.io/.
+
 Laravel Installation
 ----
 Install package using Composer
