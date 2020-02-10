@@ -8,8 +8,12 @@ It's supported on PHP 7.1+, Laravel 5.8+
 
 Before you can use this library, you first need to setup a server "echo-socketcluster-server". It works similarly to the default "laravel-echo-server".
 
-The echo-socketcluster-server package can be installed via npm.
+Echo Compatible Server using SocketCluster
+---------
+The echo-socketcluster-server package is created using SocketCluster and it's part of this repo and you can copy it to any folder of your choice. It comes with its own package.json, so you would need to run the npm install command inside the folder afterwards.
 
+Laravel Installation
+----
 Install package using Composer
 ```bash
 composer require jilenloa/echo-socketcluster-broadcast-driver:dev-master
