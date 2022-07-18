@@ -21,15 +21,6 @@ Install package using Composer
 composer require jilenloa/echo-socketcluster-broadcast-driver:dev-master
 ```
 
-After updating composer, add the service provider to the providers array in config/app.php. 
-
-**Note**: You must add this service provider just before the App\Providers\BroadcastServiceProvider::class
-
-```php
-EchoSocketCluster\Providers\EchoSocketClusterServiceProvider::class,
-App\Providers\BroadcastServiceProvider::class,
-```
-
 Add below to your broadcasting.php file.
 
 ```php
@@ -45,9 +36,9 @@ BROADCAST_DRIVER=echosocketcluster #"redis" is also compatible with this broadca
 
 ECHO_SC_HOST=localhost:8001
 ECHO_SC_TOKEN=echo-server-token
-REDIS_KEY_PREFIX=restaurant_management_system_database_
+REDIS_KEY_PREFIX=laravel_ # just like you would set in laravel-echo-server.json
 SOCKETCLUSTER_PORT=8001
-SOCKETCLUSTER_WS_ENGINE=uws
+SOCKETCLUSTER_WS_ENGINE=uws # defaule engine is "ws"
 SOCKETCLUSTER_HTTP_TOKEN=echo-server-token
 ```
 
