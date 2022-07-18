@@ -6,7 +6,12 @@ Laravel Broadcast Driver for Echo SocketCluster Server
 
 It's supported on PHP 7.1+, Laravel 5.8+
 
-Before you can use this library, you first need to setup a server "echo-socketcluster-server". It works similarly to the default "laravel-echo-server".
+Before you can use this library, you first need to setup a server "echo-socketcluster-server". It works similarly to the default "laravel-echo-server". However, it is installed with you run the vendor:publish command. Find that below.
+```
+php artisan vendor:publish --tag=echosocketcluster
+
+```
+
 
 Echo Compatible Server using SocketCluster
 ---------
@@ -42,7 +47,7 @@ SOCKETCLUSTER_WS_ENGINE=uws # defaule engine is "ws"
 SOCKETCLUSTER_HTTP_TOKEN=echo-server-token
 ```
 
-You can publish the configuration and echo-socketcluster-server files using the command:
+If you have not done this, you can publish the configuration and echo-socketcluster-server files using the command:
 
 ```bash
 php artisan vendor:publish --tag=echosocketcluster
