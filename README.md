@@ -41,10 +41,14 @@ Add below to your broadcasting.php file.
 Add this configuration to your .env file. Update the current setting for BROADCAST_DRIVER to the one below
 
 ```dotenv
-BROADCAST_DRIVER=echosocketcluster
+BROADCAST_DRIVER=echosocketcluster #"redis" is also compatible with this broadcast server just like the default laravel-echo
 
 ECHO_SC_HOST=localhost:8001
 ECHO_SC_TOKEN=echo-server-token
+REDIS_KEY_PREFIX=restaurant_management_system_database_
+SOCKETCLUSTER_PORT=8001
+SOCKETCLUSTER_WS_ENGINE=uws
+SOCKETCLUSTER_HTTP_TOKEN=echo-server-token
 ```
 
 You can publish the configuration and echo-socketcluster-server files using the command:
@@ -74,9 +78,11 @@ Below is a sample use of the Laravel Echo client.
 ```javascript
 import Echo from "laravel-echo";
 import SocketClusterConnector from "laravel-echo-connector-socketcluster";
+window.socketClusterClient = require('./socketcluster-client');
 
 let echo = new Echo({
-      broadcaster: SocketClusterConnector,
+    client: socketClusterClient,
+    broadcaster: SocketClusterConnector,
       auth: {
         headers: {
             //add custom headers here, useful for JWT authentication
@@ -94,7 +100,6 @@ For more information on laravel-echo visit https://laravel.com/docs/broadcasting
 
 **Finally**
 
-- Make sure you load the ***socketcluster-client.js*** on your web page for the socketcluster connection to work. 
 - Before testing, ensure that you have started the echo-socketcluster-server.
 
 

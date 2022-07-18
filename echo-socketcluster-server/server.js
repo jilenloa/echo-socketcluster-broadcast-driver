@@ -7,10 +7,19 @@ const path = require('path');
 const morgan = require('morgan');
 const uuid = require('uuid');
 const sccBrokerClient = require('scc-broker-client');
-const request = require('simple-json-request');
+const request = require('request-json');
+const url = require('url');
+const Redis = require("ioredis");
 
+require( 'console-stamp' )( console, {
+    format: ':date(yyyy/mm/dd HH:MM:ss.l)'
+});
 
-const ENVIRONMENT = process.env.ENV || 'dev';
+// dotenv_config_path
+require('dotenv').config({path: '.env'})
+require('dotenv').config({path: '../.env'})
+
+const ENVIRONMENT = process.env.APP_ENV || 'local';
 const SOCKETCLUSTER_PORT = process.env.SOCKETCLUSTER_PORT || 8001;
 const SOCKETCLUSTER_WS_ENGINE = process.env.SOCKETCLUSTER_WS_ENGINE || 'ws';
 const SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT = Number(process.env.SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT) || 1000;
@@ -29,9 +38,11 @@ const SCC_STATE_SERVER_ACK_TIMEOUT = Number(process.env.SCC_STATE_SERVER_ACK_TIM
 const SCC_STATE_SERVER_RECONNECT_RANDOMNESS = Number(process.env.SCC_STATE_SERVER_RECONNECT_RANDOMNESS) || null;
 const SCC_PUB_SUB_BATCH_DURATION = Number(process.env.SCC_PUB_SUB_BATCH_DURATION) || null;
 const SCC_BROKER_RETRY_DELAY = Number(process.env.SCC_BROKER_RETRY_DELAY) || null;
+const inDevMode = ENVIRONMENT === 'local' || ENVIRONMENT === 'dev';
 
+console.info(`Using WS engine "${SOCKETCLUSTER_WS_ENGINE}"`);
 let agOptions = {};
-
+let subscribers = [];
 // SOCKETCLUSTER_OPTIONS='{"protocolVersion": 1,"path": "/socketcluster/"}'
 
 if (process.env.SOCKETCLUSTER_OPTIONS) {
@@ -43,11 +54,24 @@ let httpServer = eetase(http.createServer());
 let agServer = socketClusterServer.attach(httpServer, agOptions);
 
 let expressApp = express();
-if (ENVIRONMENT === 'dev') {
+if (inDevMode) {
   // Log every HTTP request. See https://github.com/expressjs/morgan for other
   // available formats.
   expressApp.use(morgan('dev'));
 }
+
+//logging middleware
+expressApp.use(function(req, res, next) {
+    if (res.headersSent) {
+        console.log(`headers sent ${colorText(req.method, 32)} ${req.url} ${res.statusCode}`);
+    } else {
+        res.on('finish', function() {
+            console.log(`${colorText(req.method, 32)} ${req.url} ${res.statusCode}`);
+        })
+    }
+    next();
+});
+
 expressApp.use(serveStatic(path.resolve(__dirname, 'public')));
 
 // Add GET /health-check express route
@@ -55,27 +79,108 @@ expressApp.get('/health-check', (req, res) => {
   res.status(200).send('OK');
 });
 
-expressApp.post('/api/publish', function(req, res){
-    let body = "";
-    req.on('data', function(chunk) {
-        body += chunk;
+
+let redis;
+let redisKeyPrefix = process.env.REDIS_KEY_PREFIX || '';
+let redis_password = null;
+
+if(process.env.BROADCAST_DRIVER === 'redis'){
+    if(process.env.REDIS_PASSWORD && process.env.REDIS_PASSWORD !== "null"){
+        redis_password = process.env.REDIS_PASSWORD;
+    }
+    redis = new Redis({
+        port: process.env.REDIS_PORT || 6379, // Redis port
+        host: process.env.REDIS_HOST || "127.0.0.1", // Redis host
+        //username: "default", // needs Redis >= 6
+        password: redis_password,
+        //db: 0, // Defaults to 0
     });
-    req.on('end', function() {
-        console.log(body);
-        let json;
-        try{
-            json = JSON.parse(body.trim());
-            console.log(json);
-            agServer.exchange.transmitPublish(json.channel, json.data);
-            res.send('published message: '+body+' and delivered to channel: '+json.channel);
-        }catch (e) {
-            console.error('Error publishing message');
-            res.send('failed publishing message: '+e.message);
+}
+
+// this returns a promise
+let subscribeToRedisPubChannel = (callback) => {
+    return new Promise((resolve, reject) => {
+        redis.on('pmessage', (subscribed, channel, message) => {
+            try {
+                message = JSON.parse(message);
+
+                if (inDevMode) {
+                    console.info("Channel: " + channel);
+                    console.info("Event: " + message.event);
+                }
+
+                callback(channel.substring(redisKeyPrefix.length), message);
+            } catch (e) {
+                if (inDevMode) {
+                    console.info("No JSON message");
+                }
+            }
+        });
+
+        redis.psubscribe(`${redisKeyPrefix}*`, (err, count) => {
+            if (err) {
+                reject('Redis could not subscribe.')
+            }
+
+            console.log('Listening for redis events...');
+
+            resolve();
+        });
+    });
+}
+
+let unsubscribeToRedisPubChannel = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            redis.disconnect();
+            resolve();
+        } catch(e) {
+            reject('Could not disconnect from redis -> ' + e);
         }
-
     });
+}
 
-});
+if(process.env.BROADCAST_DRIVER === 'redis') {
+    console.log("Using REDIS for pub/sub");
+    subscribeToRedisPubChannel((channel, message) => {
+        (async () => {
+            agServer.exchange.transmitPublish(channel, message);
+        })();
+        console.log('Published message on '+channel);
+    })
+}else if(process.env.BROADCAST_DRIVER === 'echosocketcluster'){
+    // support http publishing
+    console.log("Using HTTP for pub/sub");
+    expressApp.post('/api/publish', function(req, res){
+        let body = "";
+        req.on('data', function(chunk) {
+            body += chunk;
+        });
+        req.on('end', function() {
+            let json;
+            try{
+                json = JSON.parse(body.trim());
+                // console.log(json);
+                if(json.token && process.env.SOCKETCLUSTER_HTTP_TOKEN){
+                    if(json.token !== process.env.SOCKETCLUSTER_HTTP_TOKEN){
+                        console.error('Error publishing message. Key mismatch.');
+                        res.send('failed publishing message: Key mismatch');
+                        return;
+                    }
+                }
+                (async () => {
+                    agServer.exchange.transmitPublish(json.channel, json.data);
+                })();
+                //agServer.exchange.transmitPublish(json.channel, json.data);
+                console.log('Published message on '+json.channel);
+                res.send('published message: '+body+' and delivered to channel: '+json.channel);
+            }catch (e) {
+                console.error('Error publishing message');
+                res.send('failed publishing message: '+e.message);
+            }
+        });
+    });
+}
 
 // HTTP request handling loop.
 (async () => {
@@ -108,18 +213,30 @@ let serverRequest = function(socket, options){
         options.form = prepareForm(socket, options);
         let body;
 
+        // sending request to the authentication endpoint on the laravel application
         console.log("Requesting url: "+options.url);
-        //console.log(options);
 
-        //console.info(options)
-        request.post(options)
-            .then(body => {
+        let url_info = url.parse(options.url);
+        let client = request.createClient(url_info.protocol+'//'+url_info.host);
+
+        client.headers = options.headers || {};
+        client.post(url_info.path, options.form)
+            .then(result => {
+                if(result.res.statusCode !== 200){
+                    if(result.res.body && result.res.body.message){
+                        reject({ reason: `Error sending authentication request. ${result.res.body.message}`, status: 0 });
+                    }else{
+                        reject({ reason: 'Error sending authentication request.', status: 0 });
+                    }
+                    return;
+                }
+                let body = result.body;
 
                 if(typeof body === "string" && body.indexOf("{") === 0){
                     body = JSON.parse(body);
                 }
 
-                if (ENVIRONMENT === 'dev') {
+                if (inDevMode) {
                     if(options.form.channel_name){
                         console.info(`[${new Date().toLocaleTimeString()}] - ${socket.id} authenticated for: ${options.form.channel_name}`);
                     }
@@ -127,7 +244,7 @@ let serverRequest = function(socket, options){
                 resolve(body);
             })
             .catch(error => {
-                if (ENVIRONMENT === 'dev') {
+                if (inDevMode) {
                     console.error(`[${new Date().toLocaleTimeString()}] - Error authenticating ${socket.id} for ${options.form.channel_name}`);
                     console.error(error);
                 }
@@ -185,8 +302,6 @@ let prepareHeaders = function(socket, options) {
     options.headers['X-Requested-With'] = 'XMLHttpRequest';
     options.headers['X-Socket-ID'] = socket.id;
 
-    console.log(options);
-
     return options.headers;
 };
 
@@ -198,9 +313,6 @@ let prepareForm = function(socket, options) {
 agServer.setMiddleware(agServer.MIDDLEWARE_INBOUND, async (middlewareStream) => {
   for await (let action of middlewareStream){
     console.log(action.type);
-
-    console.log(action);
-    console.log(action.data);
 
     if(action.type === action.SUBSCRIBE){
         if(typeof action.data === typeof undefined){
@@ -226,10 +338,6 @@ agServer.setMiddleware(agServer.MIDDLEWARE_INBOUND, async (middlewareStream) => 
             send_headers_object = {};
         }
 
-        console.log('send_headers');
-        console.log(send_headers_object);
-        console.log();
-
         let _options = {
             form: {
                 channel_name: action.data.channel
@@ -242,6 +350,7 @@ agServer.setMiddleware(agServer.MIDDLEWARE_INBOUND, async (middlewareStream) => 
         _options.form[csrf_name] = csrf_token;
 
         serverRequest(action.socket, _options).then((res) => {
+            //console.log('res: ', res);
             console.log("successfully subscribed to "+action.data.channel);
 
             if(isPresence(action.data.channel)){
@@ -257,25 +366,6 @@ agServer.setMiddleware(agServer.MIDDLEWARE_INBOUND, async (middlewareStream) => 
                     agServer.exchange.transmitPublish(action.data.channel, eventData);
                 }, 1);
             }
-            /*
-            //try to get the user information for authentication
-            let _options_info = {
-                data: {},
-                headers: req.data.auth.headers,
-                url:  req.data.auth.url.replace('/broadcasting/auth', '/api/user')
-            };
-            // support for sending token via only forms
-            _options_info.data[csrf_name] = csrf_token;
-
-            serverRequest(req.socket, _options_info).
-                then(body => {
-                    console.log(body);
-
-                }, error => {
-                    console.log(error.reason);
-                });
-                */
-
             action.allow(); //allow
         }, (error) => {
             console.error(error.reason);

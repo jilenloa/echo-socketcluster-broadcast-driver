@@ -35,6 +35,7 @@ class EchoSocketClusterServiceProvider extends BaseServiceProvider
         $configPath = __DIR__ . '/../../config/echo-sc.php';
         $jsPath = __DIR__ . '/../../echo-socketcluster-server';
         $jsPath2 = __DIR__ . '/../../echo-socketcluster-server/public/socketcluster-client.js';
+        $jsPath3 = __DIR__ . '/../../resources/js';
         if (function_exists('config_path')) {
             $publishPath = config_path('echo-sc.php');
         } else {
@@ -43,7 +44,8 @@ class EchoSocketClusterServiceProvider extends BaseServiceProvider
         $this->publishes([
             $configPath => $publishPath,
             $jsPath => base_path('echo-socketcluster-server'),
-            $jsPath2 => base_path('public/js/socketcluster-client.js')
+            $jsPath2 => base_path('public/js/socketcluster-client.js'),
+            $jsPath3 => base_path('resources/js'),
             ], 'echosocketcluster');
 
         $this->mergeConfigFrom($configPath, 'echo-sc');
