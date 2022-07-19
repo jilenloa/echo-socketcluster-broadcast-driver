@@ -1,4 +1,8 @@
 .idea/
 composer.lock
 vendor/
-echo-socketcluster-server/node_modules/
+/echo-socketcluster-server/node_modules/
+/echo-socketcluster-server/scc-broker-server/node_modules/
+/echo-socketcluster-server/scc-broker-server/package-lock.json
+/echo-socketcluster-server/scc-state-server/package-lock.json
+/echo-socketcluster-server/scc-state-server/node_modules
