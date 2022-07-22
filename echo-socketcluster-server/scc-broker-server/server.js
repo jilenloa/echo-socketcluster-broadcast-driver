@@ -11,6 +11,8 @@ const express = require('express');
 require('dotenv').config({path: '../.env'});
 require('dotenv').config({path: '../../.env'});
 
+var argv = require('minimist')(process.argv.slice(2));
+
 const DEFAULT_PORT = 8888;
 const PORT = Number(process.env.SCC_BROKER_SERVER_PORT) || DEFAULT_PORT;
 const SCC_INSTANCE_ID = uuid.v4();

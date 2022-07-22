@@ -23,8 +23,9 @@
   },
   "homepage": "https://github.com/SocketCluster/scc-state",
   "dependencies": {
-    "socketcluster-server": "^16.0.0",
+    "dotenv": "^16.0.1",
     "eetase": "^4.0.0",
-    "dotenv": "^16.0.1"
+    "minimist": "^1.2.6",
+    "socketcluster-server": "^16.0.0"
   }
 }

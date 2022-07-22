@@ -16,11 +16,13 @@ require( 'console-stamp' )( console, {
 });
 
 // dotenv_config_path
-require('dotenv').config({path: '.env'})
-require('dotenv').config({path: '../.env'})
+require('dotenv').config({path: '.env'});
+require('dotenv').config({path: '../.env'});
+
+var argv = require('minimist')(process.argv.slice(2));
 
 const ENVIRONMENT = process.env.APP_ENV || 'local';
-const SOCKETCLUSTER_PORT = process.env.SOCKETCLUSTER_PORT || 8001;
+const SOCKETCLUSTER_PORT = argv['port'] || process.env.SOCKETCLUSTER_PORT || 8001;
 const SOCKETCLUSTER_WS_ENGINE = process.env.SOCKETCLUSTER_WS_ENGINE || 'ws';
 const SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT = Number(process.env.SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT) || 1000;
 const SOCKETCLUSTER_LOG_LEVEL = process.env.SOCKETCLUSTER_LOG_LEVEL || 2;

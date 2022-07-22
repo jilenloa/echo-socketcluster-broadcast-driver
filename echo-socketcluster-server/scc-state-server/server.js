@@ -10,6 +10,8 @@ const requiredMajorSemver = getMajorSemver(packageVersion);
 require('dotenv').config({path: '../.env'});
 require('dotenv').config({path: '../../.env'});
 
+var argv = require('minimist')(process.argv.slice(2));
+
 const DEFAULT_PORT = 7777;
 const DEFAULT_CLUSTER_SCALE_OUT_DELAY = 5000;
 const DEFAULT_CLUSTER_SCALE_BACK_DELAY = 1000;
